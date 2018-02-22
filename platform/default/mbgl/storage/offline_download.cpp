@@ -347,22 +347,43 @@ void OfflineDownload::ensureResource(const Resource& resource,
                 callback(onlineResponse);
             }
 
+            // Queue up for batched insertion
+            buffer.emplace_back(resource, onlineResponse);
+
+            // Flush buffer periodically
+            if (buffer.size() == 64 || resourcesRemaining.size() == 0) {
+                flushBuffer();
+            }
+
+            continueDownload();
+        });
+    });
+}
+
+void OfflineDownload::flushBuffer() {
+    offlineDatabase.batch([&] () {
+        while (buffer.size() > 0) {
+            auto& elem = buffer.front();
+
+            const auto& resource = std::get<0>(elem);
+            const auto& response = std::get<1>(elem);
+
             status.completedResourceCount++;
-            uint64_t resourceSize = offlineDatabase.putRegionResource(id, resource, onlineResponse);
+            uint64_t resourceSize = offlineDatabase.putRegionResource(id, resource, response);
             status.completedResourceSize += resourceSize;
             if (resource.kind == Resource::Kind::Tile) {
                 status.completedTileCount += 1;
                 status.completedTileSize += resourceSize;
             }
 
-            observer->statusChanged(status);
-
             if (checkTileCountLimit(resource)) {
                 return;
             }
+            
+            buffer.pop_front();
+        }
 
-            continueDownload();
-        });
+        observer->statusChanged(status);
     });
 }
 

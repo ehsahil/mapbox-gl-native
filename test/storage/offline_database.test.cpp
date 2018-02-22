@@ -598,6 +598,28 @@ TEST(OfflineDatabase, OfflineMapboxTileCount) {
     EXPECT_EQ(0u, db.getOfflineMapboxTileCount());
 }
 
+
+TEST(OfflineDatabase, BatchInsertion) {
+    using namespace mbgl;
+
+    OfflineDatabase db(":memory:", 1024 * 100);
+    OfflineRegionDefinition definition { "", LatLngBounds::world(), 0, INFINITY, 1.0 };
+    OfflineRegion region = db.createRegion(definition, OfflineRegionMetadata());
+
+    Response response;
+    response.data = randomString(1024);
+
+    db.batch([&] () {
+        for (uint32_t i = 1; i <= 100; i++) {
+            db.putRegionResource(region.getID(), Resource::style("http://example.com/"s + util::toString(i)), response);
+        }
+    });
+
+    for (uint32_t i = 1; i <= 100; i++) {
+        EXPECT_TRUE(bool(db.get(Resource::style("http://example.com/"s + util::toString(i)))));
+    }
+}
+
 static int databasePageCount(const std::string& path) {
     mapbox::sqlite::Database db{ path, mapbox::sqlite::ReadOnly };
     mapbox::sqlite::Statement stmt{ db, "pragma page_count" };
