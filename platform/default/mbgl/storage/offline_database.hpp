@@ -58,6 +58,9 @@ public:
     bool offlineMapboxTileCountLimitExceeded();
     uint64_t getOfflineMapboxTileCount();
 
+    using BatchedFn = std::function<void ()>;
+    void batch(BatchedFn&&);
+
 private:
     void connect(int flags);
     int userVersion();

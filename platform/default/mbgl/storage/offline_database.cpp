@@ -136,6 +136,12 @@ mapbox::sqlite::Statement& OfflineDatabase::getStatement(const char* sql) {
     return *it->second;
 }
 
+void OfflineDatabase::batch(BatchedFn&& fn) {
+    mapbox::sqlite::Transaction transaction(*db);
+    fn();
+    transaction.commit();
+}
+
 optional<Response> OfflineDatabase::get(const Resource& resource) {
     auto result = getInternal(resource);
     return result ? result->first : optional<Response>();
