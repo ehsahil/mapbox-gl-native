@@ -160,7 +160,10 @@ optional<int64_t> OfflineDatabase::hasInternal(const Resource& resource) {
 }
 
 std::pair<bool, uint64_t> OfflineDatabase::put(const Resource& resource, const Response& response) {
-    return putInternal(resource, response, true);
+    mapbox::sqlite::Transaction transaction(*db, mapbox::sqlite::Transaction::Immediate);
+    auto result = putInternal(resource, response, true);
+    transaction.commit();
+    return result;
 }
 
 std::pair<bool, uint64_t> OfflineDatabase::putInternal(const Resource& resource, const Response& response, bool evict_) {
@@ -277,11 +280,6 @@ bool OfflineDatabase::putResource(const Resource& resource,
     }
 
     // We can't use REPLACE because it would change the id value.
-
-    // Begin an immediate-mode transaction to ensure that two writers do not attempt
-    // to INSERT a resource at the same moment.
-    mapbox::sqlite::Transaction transaction(*db, mapbox::sqlite::Transaction::Immediate);
-
     // clang-format off
     mapbox::sqlite::Query updateQuery{ getStatement(
         "UPDATE resources "
@@ -314,7 +312,6 @@ bool OfflineDatabase::putResource(const Resource& resource,
 
     updateQuery.run();
     if (updateQuery.changes() != 0) {
-        transaction.commit();
         return false;
     }
 
@@ -341,7 +338,6 @@ bool OfflineDatabase::putResource(const Resource& resource,
     }
 
     insertQuery.run();
-    transaction.commit();
 
     return true;
 }
@@ -469,10 +465,6 @@ bool OfflineDatabase::putTile(const Resource::TileData& tile,
 
     // We can't use REPLACE because it would change the id value.
 
-    // Begin an immediate-mode transaction to ensure that two writers do not attempt
-    // to INSERT a resource at the same moment.
-    mapbox::sqlite::Transaction transaction(*db, mapbox::sqlite::Transaction::Immediate);
-
     // clang-format off
     mapbox::sqlite::Query updateQuery{ getStatement(
         "UPDATE tiles "
@@ -511,7 +503,6 @@ bool OfflineDatabase::putTile(const Resource::TileData& tile,
 
     updateQuery.run();
     if (updateQuery.changes() != 0) {
-        transaction.commit();
         return false;
     }
 
@@ -541,7 +532,6 @@ bool OfflineDatabase::putTile(const Resource::TileData& tile,
     }
 
     insertQuery.run();
-    transaction.commit();
 
     return true;
 }
