@@ -672,16 +672,9 @@ NSArray *MGLSubexpressionsWithJSONObjects(NSArray *objects) {
                 }];
                 [expressionObject addObject:self.operand.mgl_jsonExpressionObject];
                 return expressionObject;
-            } else if (op == [MGLColor class]) {
-                if ([function isEqualToString:@"colorWithRed:green:blue:"]
-                    || [function isEqualToString:@"colorWithCalibratedRed:green:blue:"]) {
-                    NSArray *arguments = self.arguments.mgl_jsonExpressionObject;
-                    return [@[@"rgb"] arrayByAddingObjectsFromArray:arguments];
-                } else if ([function isEqualToString:@"colorWithRed:green:blue:alpha:"]
-                           || [function isEqualToString:@"colorWithCalibratedRed:green:blue:alpha:"]) {
-                    NSArray *arguments = self.arguments.mgl_jsonExpressionObject;
-                    return [@[@"rgba"] arrayByAddingObjectsFromArray:arguments];
-                }
+            } else if (op == [MGLColor class] && [function isEqualToString:@"colorWithRed:green:blue:alpha:"]) {
+                NSArray *arguments = self.arguments.mgl_jsonExpressionObject;
+                return [@[@"rgba"] arrayByAddingObjectsFromArray:arguments];
             } else if ([function isEqualToString:@"median:"] ||
                        [function isEqualToString:@"mode:"] ||
                        [function isEqualToString:@"stddev:"] ||
