@@ -8,6 +8,7 @@ import android.support.annotation.UiThread;
 
 import static com.mapbox.mapboxsdk.utils.ColorUtils.rgbaToColor;
 
+import com.mapbox.mapboxsdk.style.expressions.Expression;
 import com.mapbox.mapboxsdk.style.layers.TransitionOptions;
 
 /**
@@ -69,21 +70,21 @@ public class HeatmapLayer extends Layer {
   }
 
   /**
-   * Set a single filter.
+   * Set a single expression filter.
    *
-   * @param filter the filter to set
+   * @param filter the expression filter to set
    */
-  public void setFilter(Filter.Statement filter) {
+  public void setFilter(Expression filter) {
     nativeSetFilter(filter.toArray());
   }
 
   /**
-   * Set a single filter.
+   * Set a single expression filter.
    *
-   * @param filter the filter to set
+   * @param filter the expression filter to set
    * @return This
    */
-  public HeatmapLayer withFilter(Filter.Statement filter) {
+  public HeatmapLayer withFilter(Expression filter) {
     setFilter(filter);
     return this;
   }
